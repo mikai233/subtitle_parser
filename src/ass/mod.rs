@@ -89,7 +89,7 @@ mod test {
     }
 
     #[test]
-    fn test_duraton_parse() {
+    fn test_duration_parse() {
         let d = Duration::parse("0v0:00:00.00");
         assert!(d.is_err());
         let d = Duration::parse("00:00:0000");

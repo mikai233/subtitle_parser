@@ -28,22 +28,36 @@ impl Display for Effect {
             Effect::Karaoke => {
                 write!(f, "Karaoke")
             }
-            Effect::ScrollUp { y1, y2, delay, fadeawayheigh } => {
+            Effect::ScrollUp {
+                y1,
+                y2,
+                delay,
+                fadeawayheigh,
+            } => {
                 write!(f, "Scroll up;{y1};{y2};{delay}")?;
                 if let Some(fadeawayheigh) = fadeawayheigh {
                     write!(f, ";{fadeawayheigh}")?;
                 }
                 Ok(())
             }
-            Effect::ScrollDown { y1, y2, delay, fadeawayheight } => {
+            Effect::ScrollDown {
+                y1,
+                y2,
+                delay,
+                fadeawayheight,
+            } => {
                 write!(f, "Scroll down;{y1};{y2};{delay}")?;
                 if let Some(fadeawayheight) = fadeawayheight {
                     write!(f, ";{fadeawayheight}")?;
                 }
                 Ok(())
             }
-            Effect::Banner { delay, lefttoright, fadeawayheight } => {
-                write!(f, "Banner;{delay};{lefttoright}")?;
+            Effect::Banner {
+                delay,
+                lefttoright,
+                fadeawayheight,
+            } => {
+                write!(f, "Banner;{delay};{}", if *lefttoright { 1 } else { 0 })?;
                 if let Some(fadeawayheight) = fadeawayheight {
                     write!(f, ";{fadeawayheight}")?;
                 }
