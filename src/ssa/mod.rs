@@ -6,6 +6,7 @@ pub mod events;
 pub mod file;
 pub mod fonts;
 pub mod graphics;
+pub mod script_info;
 pub mod styles;
 
 pub fn format_duration(duration: Duration) -> String {
@@ -21,7 +22,7 @@ pub fn format_duration(duration: Duration) -> String {
 }
 
 impl Parser for Duration {
-    fn parse(src: &str) -> crate::error::Result<Self> {
+    fn parse(src: &str) -> crate::Result<Self> {
         let split1: Vec<_> = src.split(".").collect();
         if split1.len() != 2 {
             return Err(Error::parse_error::<Duration>(format!(
@@ -79,7 +80,8 @@ impl Parser for Duration {
 
 #[cfg(test)]
 mod test {
-    use crate::{ass::format_duration, parser::Parser};
+    use crate::parser::Parser;
+    use crate::ssa::format_duration;
     use std::time::Duration;
 
     #[test]

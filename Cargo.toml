@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 encoding_rs = "0.8.35"
 thiserror = "1.0.65"
+strum = { version = "0.26.3", features = ["derive"] }

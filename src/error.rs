@@ -1,9 +1,10 @@
 use std::any::type_name;
 
-pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("unknown ssa file format version `{0}`")]
+    UnknownSSAVersion(String),
     #[error("parse to {ty} error, {msg}")]
     ParseError { ty: &'static str, msg: String },
     #[error("{msg}")]
@@ -27,5 +28,9 @@ impl Error {
             error,
             msg: msg.into(),
         }
+    }
+
+    pub fn unknown_version(version: impl Into<String>) -> Self {
+        Error::UnknownSSAVersion(version.into())
     }
 }

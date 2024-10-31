@@ -1,3 +1,3 @@
 pub trait Parser: Sized {
-    fn parse(src: &str) -> crate::error::Result<Self>;
+    fn parse(src: &str) -> crate::Result<Self>;
 }
