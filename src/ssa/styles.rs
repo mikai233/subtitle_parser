@@ -1,3 +1,5 @@
+use crate::value::Value;
+
 #[derive(Debug, Copy, Clone, strum::Display, strum::FromRepr, strum::EnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum StyleFormat {
@@ -40,12 +42,32 @@ impl Eq for StyleFormat {}
 pub struct Event {}
 
 #[derive(Debug, Clone)]
-pub enum V4Styles {
-    V4Plus(V4PlusStyles),
+pub struct Style(Vec<Option<Value>>);
+
+impl Style {
+     
 }
 
 #[derive(Debug, Clone)]
-pub struct V4PlusStyles {}
+pub struct V4Styles {
+    order: Vec<StyleFormat>,
+    styles: Vec<Style>,
+}
+
+impl V4Styles {
+    pub fn new(order: Vec<StyleFormat>) -> Self {
+        Self {
+            order,
+            styles: vec![],
+        }
+    }
+
+    pub fn order(&self) -> &[StyleFormat] {
+        &self.order
+    }
+
+    pub fn add(&mut self, format: StyleFormat) {}
+}
 
 #[cfg(test)]
 mod test {

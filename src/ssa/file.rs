@@ -6,3 +6,7 @@ pub struct File {
     pub styles: V4Styles,
     pub events: Vec<Events>,
 }
+
+impl File {
+    
+}
