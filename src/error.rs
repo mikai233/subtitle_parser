@@ -1,6 +1,5 @@
 use std::any::type_name;
 
-
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("unknown ssa file format version `{0}`")]
@@ -13,6 +12,10 @@ pub enum Error {
         error: std::num::ParseIntError,
         msg: String,
     },
+    #[error("v4 style name not found")]
+    V4StyleNameNotFound,
+    #[error("invalid type, expected {expected}")]
+    InvalidType { expected: &'static str },
 }
 
 impl Error {
@@ -32,5 +35,9 @@ impl Error {
 
     pub fn unknown_version(version: impl Into<String>) -> Self {
         Error::UnknownSSAVersion(version.into())
+    }
+
+    pub fn invalid_type(expected: &'static str) -> Self {
+        Error::InvalidType { expected }
     }
 }

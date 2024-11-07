@@ -1,3 +1,6 @@
+use crate::{events::effect::Effect, format_duration};
+use std::time::Duration;
+
 #[derive(Debug, Clone)]
 pub enum Value {
     Str(String),
@@ -5,6 +8,8 @@ pub enum Value {
     Float(f64),
     Boolean(bool),
     List(Vec<Value>),
+    Duration(Duration),
+    Effect(Effect),
 }
 
 impl PartialEq for Value {
@@ -15,6 +20,8 @@ impl PartialEq for Value {
             (Value::Float(a), Value::Float(b)) => a == b,
             (Value::Boolean(a), Value::Boolean(b)) => a == b,
             (Value::List(a), Value::List(b)) => a == b,
+            (Value::Duration(a), Value::Duration(b)) => a == b,
+            (Value::Effect(a), Value::Effect(b)) => a == b,
             _ => false,
         }
     }
@@ -39,6 +46,8 @@ impl std::fmt::Display for Value {
                 }
                 write!(f, "]")
             }
+            Value::Duration(duration) => write!(f, "{}", format_duration(duration)),
+            Value::Effect(effect) => write!(f, "{}", effect),
         }
     }
 }
@@ -110,6 +119,20 @@ impl Value {
     pub fn as_list_mut(&mut self) -> Option<&mut Vec<Value>> {
         match self {
             Value::List(l) => Some(l),
+            _ => None,
+        }
+    }
+
+    pub fn as_duration(&self) -> Option<Duration> {
+        match self {
+            Value::Duration(d) => Some(*d),
+            _ => None,
+        }
+    }
+
+    pub fn as_duration_mut(&mut self) -> Option<&mut Duration> {
+        match self {
+            Value::Duration(d) => Some(d),
             _ => None,
         }
     }

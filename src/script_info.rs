@@ -1,244 +1,287 @@
-use std::{
-    collections::{btree_map::Entry, BTreeMap},
-    fmt::Display,
-};
+use std::{collections::HashMap, fmt::Display};
 
 use crate::{parser::Parser, value::Value};
 
 #[derive(Debug, Clone, Default)]
 pub struct ScriptInfo {
-    pub properties: BTreeMap<String, Value>,
+    pub properties: Vec<(String, Value)>,
 }
 
 impl ScriptInfo {
     pub fn add_property(&mut self, key: impl Into<String>, value: impl Into<Value>) {
-        self.properties.insert(key.into(), value.into());
+        let key = key.into();
+        let value = value.into();
+        if let Some((_, v)) = self.properties.iter_mut().find(|(k, _)| k == &key) {
+            *v = value;
+        } else {
+            self.properties.push((key, value));
+        }
     }
 
-    pub fn add_properties(&mut self, properties: BTreeMap<String, Value>) {
-        self.properties.extend(properties);
+    pub fn add_properties(&mut self, properties: HashMap<String, Value>) {
+        for (key, value) in properties {
+            self.add_property(key, value);
+        }
+    }
+
+    pub fn remove_property(&mut self, key: impl AsRef<str>) {
+        self.properties.retain(|(k, _)| k != key.as_ref());
     }
 
     pub fn get_property(&self, key: impl AsRef<str>) -> Option<&Value> {
-        self.properties.get(key.as_ref())
+        self.properties
+            .iter()
+            .find(|(k, _)| k == key.as_ref())
+            .map(|(_, v)| v)
+    }
+
+    pub fn get_property_mut(&mut self, key: impl AsRef<str>) -> Option<&mut Value> {
+        self.properties
+            .iter_mut()
+            .find(|(k, _)| k == key.as_ref())
+            .map(|(_, v)| v)
     }
 
     pub fn add_comment(&mut self, comment: impl Into<String>) {
-        match self.properties.entry(KeyProperty::Comment.to_string()) {
-            Entry::Occupied(mut occupied_entry) => {
-                occupied_entry
-                    .get_mut()
-                    .as_list_mut()
-                    .unwrap()
-                    .push(Value::Str(comment.into()));
+        let comments = self
+            .get_property_mut(KeyProperty::Comment)
+            .and_then(|v| v.as_list_mut());
+        match comments {
+            Some(comments) => {
+                comments.push(Value::Str(comment.into()));
             }
-            Entry::Vacant(vacant_entry) => {
-                vacant_entry.insert(Value::List(vec![Value::Str(comment.into())]));
+            None => {
+                self.add_property(
+                    KeyProperty::Comment.to_string(),
+                    Value::List(vec![Value::Str(comment.into())]),
+                );
             }
         }
     }
 
     pub fn get_comments(&self) -> Option<&Vec<Value>> {
-        self.properties
-            .get(KeyProperty::Comment.as_ref())
+        self.get_property(KeyProperty::Comment)
             .and_then(Value::as_list)
     }
 
+    pub fn get_comments_mut(&mut self) -> Option<&mut Vec<Value>> {
+        self.get_property_mut(KeyProperty::Comment)
+            .and_then(Value::as_list_mut)
+    }
+
     pub fn set_title(&mut self, title: impl Into<String>) {
-        self.properties
-            .insert(KeyProperty::Title.to_string(), Value::Str(title.into()));
+        self.add_property(KeyProperty::Title.to_string(), Value::Str(title.into()));
     }
 
     pub fn get_title(&self) -> Option<&str> {
-        self.properties
-            .get(KeyProperty::Title.as_ref())
+        self.get_property(KeyProperty::Title)
             .and_then(Value::as_str)
     }
 
+    pub fn get_title_mut(&mut self) -> Option<&mut String> {
+        self.get_property_mut(KeyProperty::Title)
+            .and_then(Value::as_str_mut)
+    }
+
     pub fn set_original_script(&mut self, original_script: impl Into<String>) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::OriginalScript.to_string(),
             Value::Str(original_script.into()),
         );
     }
 
     pub fn get_original_script(&self) -> Option<&str> {
-        self.properties
-            .get(KeyProperty::OriginalScript.as_ref())
+        self.get_property(KeyProperty::OriginalScript)
             .and_then(Value::as_str)
     }
 
+    pub fn get_original_script_mut(&mut self) -> Option<&mut String> {
+        self.get_property_mut(KeyProperty::OriginalScript)
+            .and_then(Value::as_str_mut)
+    }
+
     pub fn set_original_translation(&mut self, original_translation: impl Into<String>) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::OriginalTranslation.to_string(),
             Value::Str(original_translation.into()),
         );
     }
 
     pub fn get_original_translation(&self) -> Option<&str> {
-        self.properties
-            .get(KeyProperty::OriginalTranslation.as_ref())
+        self.get_property(KeyProperty::OriginalTranslation)
             .and_then(Value::as_str)
     }
 
+    pub fn get_original_translation_mut(&mut self) -> Option<&mut String> {
+        self.get_property_mut(KeyProperty::OriginalTranslation)
+            .and_then(Value::as_str_mut)
+    }
+
     pub fn set_original_editing(&mut self, original_editing: impl Into<String>) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::OriginalEditing.to_string(),
             Value::Str(original_editing.into()),
         );
     }
 
     pub fn get_original_editing(&self) -> Option<&str> {
-        self.properties
-            .get(KeyProperty::OriginalEditing.as_ref())
+        self.get_property(KeyProperty::OriginalEditing)
             .and_then(Value::as_str)
     }
 
+    pub fn get_original_editing_mut(&mut self) -> Option<&mut String> {
+        self.get_property_mut(KeyProperty::OriginalEditing)
+            .and_then(Value::as_str_mut)
+    }
+
     pub fn set_original_timing(&mut self, original_timing: impl Into<String>) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::OriginalTiming.to_string(),
             Value::Str(original_timing.into()),
         );
     }
 
     pub fn get_original_timing(&self) -> Option<&str> {
-        self.properties
-            .get(KeyProperty::OriginalTiming.as_ref())
+        self.get_property(KeyProperty::OriginalTiming)
             .and_then(Value::as_str)
     }
 
+    pub fn get_original_timing_mut(&mut self) -> Option<&mut String> {
+        self.get_property_mut(KeyProperty::OriginalTiming)
+            .and_then(Value::as_str_mut)
+    }
+
     pub fn set_synch_point(&mut self, synch_point: impl Into<String>) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::SynchPoint.to_string(),
             Value::Str(synch_point.into()),
         );
     }
 
     pub fn get_synch_point(&self) -> Option<&str> {
-        self.properties
-            .get(KeyProperty::SynchPoint.as_ref())
+        self.get_property(KeyProperty::SynchPoint)
             .and_then(Value::as_str)
     }
 
+    pub fn get_synch_point_mut(&mut self) -> Option<&mut String> {
+        self.get_property_mut(KeyProperty::SynchPoint)
+            .and_then(Value::as_str_mut)
+    }
+
     pub fn set_script_updated_by(&mut self, script_updated_by: impl Into<String>) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::ScriptUpdatedBy.to_string(),
             Value::Str(script_updated_by.into()),
         );
     }
 
     pub fn get_script_updated_by(&self) -> Option<&str> {
-        self.properties
-            .get(KeyProperty::ScriptUpdatedBy.as_ref())
+        self.get_property(KeyProperty::ScriptUpdatedBy)
             .and_then(Value::as_str)
     }
 
+    pub fn get_script_updated_by_mut(&mut self) -> Option<&mut String> {
+        self.get_property_mut(KeyProperty::ScriptUpdatedBy)
+            .and_then(Value::as_str_mut)
+    }
+
     pub fn set_update_details(&mut self, update_details: impl Into<String>) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::UpdateDetails.to_string(),
             Value::Str(update_details.into()),
         );
     }
 
     pub fn get_update_details(&self) -> Option<&str> {
-        self.properties
-            .get(KeyProperty::UpdateDetails.as_ref())
+        self.get_property(KeyProperty::UpdateDetails)
             .and_then(Value::as_str)
     }
 
+    pub fn get_update_details_mut(&mut self) -> Option<&mut String> {
+        self.get_property_mut(KeyProperty::UpdateDetails)
+            .and_then(Value::as_str_mut)
+    }
+
     pub fn set_script_type(&mut self, script_type: ScriptType) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::ScriptType.to_string(),
             Value::Str(script_type.to_string()),
         );
     }
 
     pub fn get_script_type(&self) -> Option<ScriptType> {
-        self.properties
-            .get(KeyProperty::ScriptType.as_ref())
+        self.get_property(KeyProperty::ScriptType)
             .and_then(Value::as_str)
             .and_then(|s| ScriptType::parse(s).ok())
     }
 
     pub fn set_collisions(&mut self, collisions: Collisions) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::Collisions.to_string(),
             Value::Str(collisions.to_string()),
         );
     }
 
     pub fn get_collisions(&self) -> Option<Collisions> {
-        self.properties
-            .get(KeyProperty::Collisions.as_ref())
+        self.get_property(KeyProperty::Collisions)
             .and_then(Value::as_str)
             .and_then(|s| Collisions::parse(s).ok())
     }
 
     pub fn set_play_res_y(&mut self, play_res_y: i64) {
-        self.properties
-            .insert(KeyProperty::PlayResY.to_string(), Value::Int(play_res_y));
+        self.add_property(KeyProperty::PlayResY.to_string(), Value::Int(play_res_y));
     }
 
     pub fn get_play_res_y(&self) -> Option<i64> {
-        self.properties
-            .get(KeyProperty::PlayResY.as_ref())
+        self.get_property(KeyProperty::PlayResY)
             .and_then(Value::as_int)
     }
 
     pub fn set_play_res_x(&mut self, play_res_x: i64) {
-        self.properties
-            .insert(KeyProperty::PlayResX.to_string(), Value::Int(play_res_x));
+        self.add_property(KeyProperty::PlayResX.to_string(), Value::Int(play_res_x));
     }
 
     pub fn get_play_res_x(&self) -> Option<i64> {
-        self.properties
-            .get(KeyProperty::PlayResX.as_ref())
+        self.get_property(KeyProperty::PlayResX)
             .and_then(Value::as_int)
     }
 
     pub fn set_play_depth(&mut self, play_depth: i64) {
-        self.properties
-            .insert(KeyProperty::PlayDepth.to_string(), Value::Int(play_depth));
+        self.add_property(KeyProperty::PlayDepth.to_string(), Value::Int(play_depth));
     }
 
     pub fn get_play_depth(&self) -> Option<i64> {
-        self.properties
-            .get(KeyProperty::PlayDepth.as_ref())
+        self.get_property(KeyProperty::PlayDepth)
             .and_then(Value::as_int)
     }
 
     pub fn set_timer(&mut self, timer: f64) {
-        self.properties
-            .insert(KeyProperty::Timer.to_string(), Value::Float(timer));
+        self.add_property(KeyProperty::Timer.to_string(), Value::Float(timer));
     }
 
     pub fn get_timer(&self) -> Option<f64> {
-        self.properties
-            .get(KeyProperty::Timer.as_ref())
+        self.get_property(KeyProperty::Timer)
             .and_then(Value::as_float)
     }
 
     pub fn set_wrap_style(&mut self, wrap_style: i64) {
-        self.properties
-            .insert(KeyProperty::WrapStyle.to_string(), Value::Int(wrap_style));
+        self.add_property(KeyProperty::WrapStyle.to_string(), Value::Int(wrap_style));
     }
 
     pub fn get_wrap_style(&self) -> Option<i64> {
-        self.properties
-            .get(KeyProperty::WrapStyle.as_ref())
+        self.get_property(KeyProperty::WrapStyle)
             .and_then(Value::as_int)
     }
 
     pub fn set_scaled_border_and_shadow(&mut self, scaled_border_and_shadow: bool) {
-        self.properties.insert(
+        self.add_property(
             KeyProperty::ScaledBorderAndShadow.to_string(),
             Value::Boolean(scaled_border_and_shadow),
         );
     }
 
     pub fn get_scaled_border_and_shadow(&self) -> Option<bool> {
-        self.properties
-            .get(KeyProperty::ScaledBorderAndShadow.as_ref())
+        self.get_property(KeyProperty::ScaledBorderAndShadow)
             .and_then(Value::as_bool)
     }
 }
