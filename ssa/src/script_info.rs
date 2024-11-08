@@ -4,7 +4,7 @@ use crate::{parser::Parser, value::Value};
 
 #[derive(Debug, Clone, Default)]
 pub struct ScriptInfo {
-    pub properties: Vec<(String, Value)>,
+    properties: Vec<(String, Value)>,
 }
 
 impl ScriptInfo {
@@ -40,6 +40,14 @@ impl ScriptInfo {
             .iter_mut()
             .find(|(k, _)| k == key.as_ref())
             .map(|(_, v)| v)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &Value)> {
+        self.properties.iter().map(|(k, v)| (k.as_str(), v))
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&str, &mut Value)> {
+        self.properties.iter_mut().map(|(k, v)| (k.as_str(), v))
     }
 
     pub fn add_comment(&mut self, comment: impl Into<String>) {

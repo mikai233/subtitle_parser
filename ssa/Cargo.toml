@@ -1,0 +1,9 @@
+[package]
+name = "ssa"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+encoding_rs = "0.8.35"
+thiserror = "2.0.0"
+strum = { version = "0.26.3", features = ["derive"] }

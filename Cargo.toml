@@ -1,9 +1,4 @@
-[package]
-name = "subtitle_parser"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = ["ssa"]
 
-[dependencies]
-encoding_rs = "0.8.35"
-thiserror = "1.0.65"
-strum = { version = "0.26.3", features = ["derive"] }
+resolver = "2"
