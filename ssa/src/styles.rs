@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::value::Value;
 
 #[derive(
@@ -8,10 +10,15 @@ pub enum StyleFormat {
     Name,
     Fontname,
     Fontsize,
+    #[strum(serialize = "PrimaryColour", serialize = "PrimaryColor")]
     PrimaryColour,
+    #[strum(serialize = "SecondaryColour", serialize = "SecondaryColor")]
     SecondaryColour,
+    #[strum(serialize = "TertiaryColour", serialize = "TertiaryColor")]
     TertiaryColour,
-    OutlineColor,
+    #[strum(serialize = "OutlineColour", serialize = "OutlineColor")]
+    OutlineColour,
+    #[strum(serialize = "BackColour", serialize = "BackColor")]
     BackColour,
     Bold,
     Italic,
@@ -78,6 +85,15 @@ impl Style {
                 return;
             }
         }
+    }
+}
+
+impl Display for Style {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (_, value) in self.0.iter() {
+            todo!()
+        }
+        Ok(())
     }
 }
 
@@ -154,7 +170,7 @@ impl Default for V4Styles {
                 StyleFormat::Fontsize,
                 StyleFormat::PrimaryColour,
                 StyleFormat::SecondaryColour,
-                StyleFormat::OutlineColor,
+                StyleFormat::OutlineColour,
                 StyleFormat::BackColour,
                 StyleFormat::Bold,
                 StyleFormat::Italic,
@@ -178,11 +194,29 @@ impl Default for V4Styles {
     }
 }
 
+impl Display for V4Styles {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "Format: {}",
+            self.order
+                .iter()
+                .map(|f| f.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        )?;
+        for (name, style) in self.styles.iter() {
+            writeln!(f, "{}: {}", name, style)?;
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use std::{f32::consts::E, str::FromStr};
+    use std::str::FromStr;
 
-    use crate::{error::Error, events::EventFormat};
+    use crate::error::Error;
 
     use super::StyleFormat;
 
@@ -228,8 +262,8 @@ mod test {
             "Encoding",
         ];
         for ele in format {
-            EventFormat::from_str(ele)
-                .map_err(|_| Error::parse_error::<EventFormat>(ele.to_string()))?;
+            StyleFormat::from_str(ele)
+                .map_err(|_| Error::parse_error::<StyleFormat>(ele.to_string()))?;
         }
         Ok(())
     }

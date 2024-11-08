@@ -29,6 +29,11 @@ pub enum Error {
         #[from]
         source: std::io::Error,
     },
+    #[error("fmt error")]
+    FmtError {
+        #[from]
+        source: std::fmt::Error,
+    }
 }
 
 impl Error {

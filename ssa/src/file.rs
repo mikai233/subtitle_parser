@@ -2,7 +2,7 @@ use encoding_rs::UTF_8;
 use strum::VariantNames;
 
 use crate::{
-    error::{self, Error},
+    error::Error,
     events::EventFormat,
     fonts::Fonts,
     graphics::Graphics,
@@ -36,6 +36,22 @@ impl File {
     pub fn from_file(path: impl AsRef<Path>) -> crate::Result<Self> {
         let ssa_bytes = std::fs::read(path)?;
         Self::parse(&ssa_bytes)
+    }
+
+    pub fn to_string(&self) -> crate::Result<String> {
+        let mut ssa = String::new();
+        writeln!(ssa, "[Script Info]")?;
+        writeln!(ssa, "{}", self.script)?;
+        match self.version {
+            Version::V4 => {
+                writeln!(ssa, "[V4 Styles]")?;
+            }
+            Version::V4Plus => {
+                writeln!(ssa, "[V4+ Styles]")?;
+            }
+        }
+        writeln!(ssa, self.styles)?;
+        Ok(ssa)
     }
 
     fn parse(ssa_bytes: &[u8]) -> crate::Result<Self> {
@@ -195,6 +211,8 @@ mod test {
 
     #[test]
     fn test_file() -> crate::Result<()> {
+        let file = File::from_file("C:/Users/dairch/Downloads/[SweetSub] Oniichan ha Oshimai!.chs/[SweetSub] Oniichan ha Oshimai! - 01.chs.ass")?;
+        println!("{file:?}");
         Ok(())
     }
 }

@@ -102,7 +102,7 @@ impl Events {
         &self.order
     }
 
-    pub fn push(&mut self, event: Event) {
+    pub fn add(&mut self, event: Event) {
         self.events.push(event);
     }
 

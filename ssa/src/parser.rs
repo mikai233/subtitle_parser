@@ -114,7 +114,7 @@ impl SsaParser {
                         StyleFormat::PrimaryColour
                         | StyleFormat::SecondaryColour
                         | StyleFormat::TertiaryColour
-                        | StyleFormat::OutlineColor
+                        | StyleFormat::OutlineColour
                         | StyleFormat::BackColour => {
                             style.set(*format, value.to_string());
                         }
@@ -142,8 +142,13 @@ impl SsaParser {
                                 .map_err(|error| Error::parse_int_error(error, value))?;
                             style.set(*format, value);
                         }
-                        StyleFormat::Outline
-                        | StyleFormat::Shadow
+                        StyleFormat::Outline => {
+                            let value = value
+                                .parse::<f64>()
+                                .map_err(|error| Error::parse_float_error(error, value))?;
+                            style.set(*format, value);
+                        }
+                        StyleFormat::Shadow
                         | StyleFormat::Alignment
                         | StyleFormat::MarginL
                         | StyleFormat::MarginR
@@ -168,6 +173,7 @@ impl SsaParser {
                     }
                     Ok::<_, Error>(())
                 })?;
+            self.styles.add(style)?;
         }
         Ok(())
     }
@@ -231,6 +237,7 @@ impl SsaParser {
                     }
                     Ok::<_, Error>(())
                 })?;
+            self.events.add(event);
         }
         Ok(())
     }
