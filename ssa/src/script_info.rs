@@ -355,9 +355,9 @@ impl Display for Collisions {
 
 impl Parser for Collisions {
     fn parse(s: &str) -> crate::Result<Self> {
-        match s {
-            "Normal" => Ok(Collisions::Normal),
-            "Reverse" => Ok(Collisions::Reverse),
+        match s.to_lowercase().as_str() {
+            "normal" => Ok(Collisions::Normal),
+            "reverse" => Ok(Collisions::Reverse),
             _ => Err(crate::error::Error::parse_error::<Collisions>(
                 s.to_string(),
             )),

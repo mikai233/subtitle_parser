@@ -167,3 +167,15 @@ impl Into<Value> for Vec<Value> {
         Value::List(self)
     }
 }
+
+impl Into<Value> for Duration {
+    fn into(self) -> Value {
+        Value::Duration(self)
+    }
+}
+
+impl Into<Value> for Effect {
+    fn into(self) -> Value {
+        Value::Effect(self)
+    }
+}

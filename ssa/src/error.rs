@@ -12,10 +12,23 @@ pub enum Error {
         error: std::num::ParseIntError,
         msg: String,
     },
+    #[error("{msg}")]
+    ParseFloatError {
+        #[source]
+        error: std::num::ParseFloatError,
+        msg: String,
+    },
     #[error("v4 style name not found")]
     V4StyleNameNotFound,
     #[error("invalid type, expected {expected}")]
-    InvalidType { expected: &'static str },
+    InvalidType { expected: String },
+    #[error("invalid utf-8 encoding")]
+    InvalidUTF8Encoding,
+    #[error("io error")]
+    IoError {
+        #[from]
+        source: std::io::Error,
+    },
 }
 
 impl Error {
@@ -33,11 +46,20 @@ impl Error {
         }
     }
 
+    pub fn parse_float_error(error: std::num::ParseFloatError, msg: impl Into<String>) -> Self {
+        Error::ParseFloatError {
+            error,
+            msg: msg.into(),
+        }
+    }
+
     pub fn unknown_version(version: impl Into<String>) -> Self {
         Error::UnknownSSAVersion(version.into())
     }
 
-    pub fn invalid_type(expected: &'static str) -> Self {
-        Error::InvalidType { expected }
+    pub fn invalid_type(expected: impl Into<String>) -> Self {
+        Error::InvalidType {
+            expected: expected.into(),
+        }
     }
 }

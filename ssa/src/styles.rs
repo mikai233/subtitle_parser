@@ -1,6 +1,8 @@
 use crate::value::Value;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::Display, strum::FromRepr, strum::EnumString)]
+#[derive(
+    Debug, Copy, Clone, Eq, PartialEq, strum::Display, strum::EnumString, strum::VariantNames,
+)]
 #[strum(ascii_case_insensitive)]
 pub enum StyleFormat {
     Name,
@@ -42,10 +44,10 @@ impl Style {
         Self(style)
     }
 
-    pub fn set(&mut self, format: StyleFormat, value: Value) {
+    pub fn set(&mut self, format: StyleFormat, value: impl Into<Value>) {
         for (f, v) in self.0.iter_mut() {
             if f == &format {
-                *v = Some(value);
+                *v = Some(value.into());
                 return;
             }
         }
@@ -178,7 +180,9 @@ impl Default for V4Styles {
 
 #[cfg(test)]
 mod test {
-    use std::str::FromStr;
+    use std::{f32::consts::E, str::FromStr};
+
+    use crate::{error::Error, events::EventFormat};
 
     use super::StyleFormat;
 
@@ -194,5 +198,39 @@ mod test {
         assert_eq!(event, StyleFormat::SecondaryColour);
         assert_eq!(event.to_string(), "SecondaryColour");
         assert_eq!(StyleFormat::MarginV.to_string(), "MarginV");
+    }
+
+    #[test]
+    fn test_parse_event_format() -> crate::Result<()> {
+        let format = [
+            "Name",
+            "Fontname",
+            "Fontsize",
+            "PrimaryColour",
+            "SecondaryColour",
+            "OutlineColour",
+            "BackColour",
+            "Bold",
+            "Italic",
+            "Underline",
+            "StrikeOut",
+            "ScaleX",
+            "ScaleY",
+            "Spacing",
+            "Angle",
+            "BorderStyle",
+            "Outline",
+            "Shadow",
+            "Alignment",
+            "MarginL",
+            "MarginR",
+            "MarginV",
+            "Encoding",
+        ];
+        for ele in format {
+            EventFormat::from_str(ele)
+                .map_err(|_| Error::parse_error::<EventFormat>(ele.to_string()))?;
+        }
+        Ok(())
     }
 }

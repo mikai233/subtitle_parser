@@ -3,9 +3,13 @@ use crate::value::Value;
 pub mod effect;
 pub mod text;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(
+    Debug, Copy, Clone, Eq, PartialEq, strum::EnumString, strum::Display, strum::VariantNames,
+)]
+#[strum(ascii_case_insensitive)]
 pub enum EventFormat {
     Layer,
+    Marked,
     Start,
     End,
     Style,
@@ -17,7 +21,8 @@ pub enum EventFormat {
     Text,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum EventType {
     Dialogue,
     Comment,
@@ -42,10 +47,10 @@ impl Event {
         Self { event_type, values }
     }
 
-    pub fn set(&mut self, format: EventFormat, value: Value) {
+    pub fn set(&mut self, format: EventFormat, value: impl Into<Value>) {
         for (f, v) in self.values.iter_mut() {
             if f == &format {
-                *v = Some(value);
+                *v = Some(value.into());
                 return;
             }
         }
@@ -79,7 +84,7 @@ impl Event {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Events {
     order: Vec<EventFormat>,
     events: Vec<Event>,

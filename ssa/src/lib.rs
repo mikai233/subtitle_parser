@@ -11,6 +11,7 @@ pub mod parser;
 pub mod script_info;
 pub mod styles;
 pub mod value;
+pub mod version;
 
 pub type Result<T> = std::result::Result<T, Error>;
 

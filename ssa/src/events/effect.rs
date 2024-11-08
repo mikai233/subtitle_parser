@@ -1,5 +1,7 @@
 use std::fmt::{Display, Formatter};
 
+use crate::parser::Parser;
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Effect {
     Karaoke,
@@ -64,5 +66,11 @@ impl Display for Effect {
                 Ok(())
             }
         }
+    }
+}
+
+impl Parser for Effect {
+    fn parse(src: &str) -> crate::Result<Self> {
+        todo!()
     }
 }
