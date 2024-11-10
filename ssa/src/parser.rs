@@ -237,7 +237,7 @@ impl SsaParser {
                     }
                     Ok::<_, Error>(())
                 })?;
-            self.events.add(event);
+            self.events.push(event);
         }
         Ok(())
     }

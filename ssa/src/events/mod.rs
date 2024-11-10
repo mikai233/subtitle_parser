@@ -1,7 +1,7 @@
-use std::{fmt::Display, time::Duration};
-
 use effect::Effect;
 use itertools::Itertools;
+use std::ops::{Deref, DerefMut};
+use std::{fmt::Display, time::Duration};
 
 use crate::value::Value;
 
@@ -124,7 +124,7 @@ impl Display for Event {
 #[derive(Debug, Clone)]
 pub struct Events {
     order: Vec<EventFormat>,
-    events: Vec<Event>,
+    pub events: Vec<Event>,
 }
 
 impl Events {
@@ -138,18 +138,6 @@ impl Events {
     pub fn order(&self) -> &Vec<EventFormat> {
         &self.order
     }
-
-    pub fn add(&mut self, event: Event) {
-        self.events.push(event);
-    }
-
-    pub fn iter(&self) -> std::slice::Iter<Event> {
-        self.events.iter()
-    }
-
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<Event> {
-        self.events.iter_mut()
-    }
 }
 
 impl Display for Events {
@@ -159,6 +147,20 @@ impl Display for Events {
             writeln!(f, "{}", event)?;
         }
         Ok(())
+    }
+}
+
+impl Deref for Events {
+    type Target = Vec<Event>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.events
+    }
+}
+
+impl DerefMut for Events {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.events
     }
 }
 

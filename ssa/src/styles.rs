@@ -192,6 +192,10 @@ impl V4Styles {
         self.styles.retain(|(n, _)| n != name);
     }
 
+    pub fn clear(&mut self) {
+        self.styles.clear();
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = (&str, &Style)> {
         self.styles.iter().map(|(n, s)| (n.as_str(), s))
     }
