@@ -297,13 +297,21 @@ impl ScriptInfo {
 impl Display for ScriptInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for (key, value) in &self.properties {
-            if key == KeyProperty::ScaledBorderAndShadow.as_ref() {
+            if key == KeyProperty::Comment.as_ref() {
+                if let Some(comments) = value.as_list() {
+                    for ele in comments {
+                        writeln!(f, "; {}", ele)?;
+                    }
+                }
+                continue;
+            } else if key == KeyProperty::ScaledBorderAndShadow.as_ref() {
                 let value = if value.as_bool().unwrap_or_default() {
-                    "Yes"
+                    "yes"
                 } else {
-                    "No"
+                    "no"
                 };
                 writeln!(f, "{}: {}", key, value)?;
+                continue;
             }
             writeln!(f, "{}: {}", key, value)?;
         }

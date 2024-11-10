@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::{events::effect::Effect, format_duration};
 use std::time::Duration;
 
@@ -38,12 +40,7 @@ impl std::fmt::Display for Value {
             Value::Boolean(b) => write!(f, "{}", b),
             Value::List(l) => {
                 write!(f, "[")?;
-                for (i, v) in l.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{}", v)?;
-                }
+                write!(f, "{}", l.iter().join(", "))?;
                 write!(f, "]")
             }
             Value::Duration(duration) => write!(f, "{}", format_duration(duration)),
@@ -133,6 +130,20 @@ impl Value {
     pub fn as_duration_mut(&mut self) -> Option<&mut Duration> {
         match self {
             Value::Duration(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    pub fn as_effect(&self) -> Option<&Effect> {
+        match self {
+            Value::Effect(e) => Some(e),
+            _ => None,
+        }
+    }
+
+    pub fn as_effect_mut(&mut self) -> Option<&mut Effect> {
+        match self {
+            Value::Effect(e) => Some(e),
             _ => None,
         }
     }

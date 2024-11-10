@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use itertools::Itertools;
+
 use crate::value::Value;
 
 #[derive(
@@ -37,6 +39,35 @@ pub enum StyleFormat {
     MarginV,
     AlphaLevel,
     Encoding,
+}
+
+impl StyleFormat {
+    fn default_value(&self) -> Value {
+        match self {
+            StyleFormat::Name => "".to_owned().into(),
+            StyleFormat::Fontname => "".to_owned().into(),
+            StyleFormat::Fontsize => 0.into(),
+            StyleFormat::PrimaryColour
+            | StyleFormat::SecondaryColour
+            | StyleFormat::TertiaryColour
+            | StyleFormat::OutlineColour
+            | StyleFormat::BackColour => "&H00000000".to_owned().into(),
+            StyleFormat::Bold
+            | StyleFormat::Italic
+            | StyleFormat::Underline
+            | StyleFormat::StrikeOut => 0.into(),
+            StyleFormat::ScaleX | StyleFormat::ScaleY => 100.0.into(),
+            StyleFormat::Spacing | StyleFormat::Angle => 0.0.into(),
+            StyleFormat::BorderStyle => 1.into(),
+            StyleFormat::Outline | StyleFormat::Shadow => 0.0.into(),
+            StyleFormat::Alignment => 2.into(),
+            StyleFormat::MarginL
+            | StyleFormat::MarginR
+            | StyleFormat::MarginV
+            | StyleFormat::AlphaLevel => 10.into(),
+            StyleFormat::Encoding => 134.into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -90,9 +121,18 @@ impl Style {
 
 impl Display for Style {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (_, value) in self.0.iter() {
-            todo!()
+        let mut values = Vec::with_capacity(self.0.len());
+        for (style, value) in self.0.iter() {
+            match value {
+                Some(value) => {
+                    values.push(value.to_string());
+                }
+                None => {
+                    values.push(style.default_value().to_string());
+                }
+            }
         }
+        write!(f, "{}", values.join(","))?;
         Ok(())
     }
 }
@@ -196,17 +236,9 @@ impl Default for V4Styles {
 
 impl Display for V4Styles {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(
-            f,
-            "Format: {}",
-            self.order
-                .iter()
-                .map(|f| f.to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
-        )?;
-        for (name, style) in self.styles.iter() {
-            writeln!(f, "{}: {}", name, style)?;
+        writeln!(f, "Format: {}", self.order.iter().join(", "))?;
+        for (_, style) in self.styles.iter() {
+            writeln!(f, "Style: {}", style)?;
         }
         Ok(())
     }

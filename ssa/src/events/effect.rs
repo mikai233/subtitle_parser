@@ -4,6 +4,7 @@ use crate::parser::Parser;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Effect {
+    None,
     Karaoke,
     ScrollUp {
         y1: i32,
@@ -27,6 +28,9 @@ pub enum Effect {
 impl Display for Effect {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Effect::None => {
+                write!(f, "")
+            }
             Effect::Karaoke => {
                 write!(f, "Karaoke")
             }

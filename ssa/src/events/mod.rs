@@ -1,3 +1,8 @@
+use std::{fmt::Display, time::Duration};
+
+use effect::Effect;
+use itertools::Itertools;
+
 use crate::value::Value;
 
 pub mod effect;
@@ -21,7 +26,21 @@ pub enum EventFormat {
     Text,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::EnumString)]
+impl EventFormat {
+    pub fn default_value(&self) -> Value {
+        match self {
+            EventFormat::Layer => 0.into(),
+            EventFormat::Marked => "Marked=0".to_owned().into(),
+            EventFormat::Start | EventFormat::End => Duration::default().into(),
+            EventFormat::Style | EventFormat::Name => "".to_owned().into(),
+            EventFormat::MarginL | EventFormat::MarginR | EventFormat::MarginV => 10.into(),
+            EventFormat::Effect => Effect::None.into(),
+            EventFormat::Text => "".to_owned().into(),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::EnumString, strum::Display)]
 #[strum(ascii_case_insensitive)]
 pub enum EventType {
     Dialogue,
@@ -84,6 +103,24 @@ impl Event {
     }
 }
 
+impl Display for Event {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut values = Vec::with_capacity(self.values.len());
+        for (format, ele) in &self.values {
+            match ele {
+                Some(ele) => {
+                    values.push(ele.to_string());
+                }
+                None => {
+                    values.push(format.default_value().to_string());
+                }
+            }
+        }
+        write!(f, "{}: {}", self.event_type, values.join(","))?;
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Events {
     order: Vec<EventFormat>,
@@ -112,5 +149,15 @@ impl Events {
 
     pub fn iter_mut(&mut self) -> std::slice::IterMut<Event> {
         self.events.iter_mut()
+    }
+}
+
+impl Display for Events {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Format: {}", self.order.iter().join(", "))?;
+        for event in &self.events {
+            writeln!(f, "{}", event)?;
+        }
+        Ok(())
     }
 }

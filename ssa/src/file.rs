@@ -1,4 +1,5 @@
 use encoding_rs::UTF_8;
+use std::fmt::Write;
 use strum::VariantNames;
 
 use crate::{
@@ -30,7 +31,7 @@ impl File {
     }
 
     pub fn from_str(ssa_str: impl AsRef<str>) -> crate::Result<Self> {
-        todo!()
+        Self::parse(ssa_str.as_ref().as_bytes())
     }
 
     pub fn from_file(path: impl AsRef<Path>) -> crate::Result<Self> {
@@ -50,7 +51,9 @@ impl File {
                 writeln!(ssa, "[V4+ Styles]")?;
             }
         }
-        writeln!(ssa, self.styles)?;
+        writeln!(ssa, "{}", self.styles)?;
+        writeln!(ssa, "[Events]")?;
+        writeln!(ssa, "{}", self.events)?;
         Ok(ssa)
     }
 
@@ -211,8 +214,10 @@ mod test {
 
     #[test]
     fn test_file() -> crate::Result<()> {
-        let file = File::from_file("C:/Users/dairch/Downloads/[SweetSub] Oniichan ha Oshimai!.chs/[SweetSub] Oniichan ha Oshimai! - 01.chs.ass")?;
-        println!("{file:?}");
+        let path="D:/BaiduNetdiskDownload/TSDM@sillonae@onimai 别当欧尼酱了/[SweetSub&VCB-Studio] Oniichan ha Oshimai! [Ma10p_1080p]/[SweetSub&VCB-Studio] Oniichan ha Oshimai! [01][Ma10p_1080p][x265_flac_2ac3].chs.ass";
+        let file = File::from_file(path)?;
+        let ssa_str = file.to_string()?;
+        println!("{ssa_str}");
         Ok(())
     }
 }
