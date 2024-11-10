@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Display};
 
 use crate::{parser::Parser, value::Value};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ScriptInfo {
     properties: Vec<(String, Value)>,
 }
@@ -316,6 +316,20 @@ impl Display for ScriptInfo {
             writeln!(f, "{}: {}", key, value)?;
         }
         Ok(())
+    }
+}
+
+impl Default for ScriptInfo {
+    fn default() -> Self {
+        let mut script_info = Self {
+            properties: Default::default(),
+        };
+        script_info.set_script_type(ScriptType::V4Plus);
+        script_info.set_play_res_x(1920);
+        script_info.set_play_res_y(1080);
+        script_info.set_scaled_border_and_shadow(true);
+        script_info.set_wrap_style(0);
+        script_info
     }
 }
 

@@ -121,7 +121,7 @@ impl Display for Event {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Events {
     order: Vec<EventFormat>,
     events: Vec<Event>,
@@ -159,5 +159,25 @@ impl Display for Events {
             writeln!(f, "{}", event)?;
         }
         Ok(())
+    }
+}
+
+impl Default for Events {
+    fn default() -> Self {
+        Self {
+            order: vec![
+                EventFormat::Layer,
+                EventFormat::Start,
+                EventFormat::End,
+                EventFormat::Style,
+                EventFormat::Name,
+                EventFormat::MarginL,
+                EventFormat::MarginR,
+                EventFormat::MarginV,
+                EventFormat::Effect,
+                EventFormat::Text,
+            ],
+            events: Default::default(),
+        }
     }
 }

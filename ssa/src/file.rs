@@ -57,10 +57,15 @@ impl File {
         Ok(ssa)
     }
 
+    pub fn write_to(&self, path: impl AsRef<Path>) -> crate::Result<()> {
+        std::fs::write(path, self.to_string()?)?;
+        Ok(())
+    }
+
     fn parse(ssa_bytes: &[u8]) -> crate::Result<Self> {
         let (ssa_str, _, had_errors) = UTF_8.decode(ssa_bytes);
         if had_errors {
-            return Err(crate::Error::InvalidUTF8Encoding);
+            return Err(Error::InvalidUTF8Encoding);
         }
         let mut version = Version::V4Plus;
         let mut parser = SsaParser::default();
@@ -211,13 +216,35 @@ impl File {
 #[cfg(test)]
 mod test {
     use super::File;
+    use crate::events::EventFormat;
+    use crate::script_info::ScriptType;
+    use crate::value::Value;
+    use crate::version::Version;
+    use std::time::Duration;
+
+    #[test]
+    fn test_default() {
+        let file = File::new();
+        assert_eq!(file.version, Version::V4Plus);
+        assert!(matches!(
+            file.script.get_script_type(),
+            Some(ScriptType::V4Plus)
+        ));
+    }
 
     #[test]
     fn test_file() -> crate::Result<()> {
         let path="D:/BaiduNetdiskDownload/TSDM@sillonae@onimai 别当欧尼酱了/[SweetSub&VCB-Studio] Oniichan ha Oshimai! [Ma10p_1080p]/[SweetSub&VCB-Studio] Oniichan ha Oshimai! [01][Ma10p_1080p][x265_flac_2ac3].chs.ass";
-        let file = File::from_file(path)?;
-        let ssa_str = file.to_string()?;
-        println!("{ssa_str}");
+        let mut file = File::from_file(path)?;
+        for event in file.events.iter_mut() {
+            if let Some(duration) = event
+                .get_mut(EventFormat::Start)
+                .and_then(Value::as_duration_mut)
+            {
+                *duration += Duration::from_secs(60);
+            }
+        }
+        println!("{}", file.to_string()?);
         Ok(())
     }
 }
