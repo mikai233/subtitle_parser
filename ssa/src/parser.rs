@@ -243,11 +243,11 @@ impl SsaParser {
     }
 
     pub(crate) fn parse_fonts(&mut self, src: &str) -> crate::Result<()> {
-        todo!()
+        todo!("{}", src)
     }
 
     pub(crate) fn parse_graphics(&mut self, src: &str) -> crate::Result<()> {
-        todo!()
+        todo!("{}", src)
     }
 }
 

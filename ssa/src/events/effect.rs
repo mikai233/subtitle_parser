@@ -75,6 +75,6 @@ impl Display for Effect {
 
 impl Parser for Effect {
     fn parse(src: &str) -> crate::Result<Self> {
-        todo!()
+        todo!("{}", src)
     }
 }
