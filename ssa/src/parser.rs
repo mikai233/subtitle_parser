@@ -1,12 +1,12 @@
-use std::{str::FromStr, time::Duration};
+use std::str::FromStr;
 
 use crate::{
     error::Error,
-    events::{effect::Effect, Event, EventFormat, EventType, Events},
+    events::{Event, EventType, Events},
     fonts::Fonts,
     graphics::Graphics,
-    script_info::{Collisions, KeyProperty, ScriptInfo, ScriptType},
-    styles::{Style, StyleFormat, V4Styles},
+    script_info::{Collisions, Key, ScriptInfo, ScriptType},
+    styles::{Style, V4Styles},
     value::Value,
 };
 
@@ -37,46 +37,43 @@ impl SsaParser {
         if let Some(pos) = src.find(':') {
             let key = &src[..pos];
             let value = &src[pos + 1..];
-            match KeyProperty::from_str(key) {
+            match Key::from_str(key) {
                 Ok(key) => match key {
-                    KeyProperty::Comment => {}
-                    KeyProperty::Title
-                    | KeyProperty::OriginalScript
-                    | KeyProperty::OriginalTranslation
-                    | KeyProperty::OriginalEditing
-                    | KeyProperty::OriginalTiming
-                    | KeyProperty::SynchPoint
-                    | KeyProperty::ScriptUpdatedBy
-                    | KeyProperty::UpdateDetails => {
+                    Key::Comment => {}
+                    Key::Title
+                    | Key::OriginalScript
+                    | Key::OriginalTranslation
+                    | Key::OriginalEditing
+                    | Key::OriginalTiming
+                    | Key::SynchPoint
+                    | Key::ScriptUpdatedBy
+                    | Key::UpdateDetails => {
                         self.script_info
                             .add_property(key.to_string(), Value::Str(value.trim().to_string()));
                     }
-                    KeyProperty::ScriptType => {
+                    Key::ScriptType => {
                         self.script_info
                             .set_script_type(ScriptType::parse(value.trim())?);
                     }
-                    KeyProperty::Collisions => {
+                    Key::Collisions => {
                         self.script_info
                             .set_collisions(Collisions::parse(value.trim())?);
                     }
-                    KeyProperty::PlayResY
-                    | KeyProperty::PlayResX
-                    | KeyProperty::PlayDepth
-                    | KeyProperty::WrapStyle => {
+                    Key::PlayResY | Key::PlayResX | Key::PlayDepth | Key::WrapStyle => {
                         let value = value
                             .trim()
                             .parse::<i64>()
                             .map_err(|error| Error::parse_int_error(error, value.trim()))?;
                         self.script_info.add_property(key.to_string(), value);
                     }
-                    KeyProperty::Timer => {
+                    Key::Timer => {
                         let value = value
                             .trim()
                             .parse::<f64>()
                             .map_err(|error| Error::parse_float_error(error, value.trim()))?;
                         self.script_info.set_timer(value);
                     }
-                    KeyProperty::ScaledBorderAndShadow => {
+                    Key::ScaledBorderAndShadow => {
                         let value = if value.trim().to_ascii_lowercase() == "yes" {
                             true
                         } else {
@@ -101,76 +98,8 @@ impl SsaParser {
                 .split(',')
                 .zip(self.styles.order())
                 .try_for_each(|(value, format)| {
-                    match format {
-                        StyleFormat::Name | StyleFormat::Fontname => {
-                            style.set(*format, value.to_string());
-                        }
-                        StyleFormat::Fontsize => {
-                            let value = value
-                                .parse::<i64>()
-                                .map_err(|error| Error::parse_int_error(error, value))?;
-                            style.set(StyleFormat::Fontsize, value);
-                        }
-                        StyleFormat::PrimaryColour
-                        | StyleFormat::SecondaryColour
-                        | StyleFormat::TertiaryColour
-                        | StyleFormat::OutlineColour
-                        | StyleFormat::BackColour => {
-                            style.set(*format, value.to_string());
-                        }
-                        StyleFormat::Bold
-                        | StyleFormat::Italic
-                        | StyleFormat::Underline
-                        | StyleFormat::StrikeOut => {
-                            let value = value
-                                .parse::<i64>()
-                                .map_err(|error| Error::parse_int_error(error, value))?;
-                            style.set(*format, value);
-                        }
-                        StyleFormat::ScaleX
-                        | StyleFormat::ScaleY
-                        | StyleFormat::Spacing
-                        | StyleFormat::Angle => {
-                            let value = value
-                                .parse::<f64>()
-                                .map_err(|error| Error::parse_float_error(error, value))?;
-                            style.set(*format, value);
-                        }
-                        StyleFormat::BorderStyle => {
-                            let value = value
-                                .parse::<i64>()
-                                .map_err(|error| Error::parse_int_error(error, value))?;
-                            style.set(*format, value);
-                        }
-                        StyleFormat::Outline => {
-                            let value = value
-                                .parse::<f64>()
-                                .map_err(|error| Error::parse_float_error(error, value))?;
-                            style.set(*format, value);
-                        }
-                        StyleFormat::Shadow
-                        | StyleFormat::Alignment
-                        | StyleFormat::MarginL
-                        | StyleFormat::MarginR
-                        | StyleFormat::MarginV => {
-                            let value = value
-                                .parse::<i64>()
-                                .map_err(|error| Error::parse_int_error(error, value))?;
-                            style.set(*format, value);
-                        }
-                        StyleFormat::AlphaLevel => {
-                            let value = value
-                                .parse::<f64>()
-                                .map_err(|error| Error::parse_float_error(error, value))?;
-                            style.set(*format, value);
-                        }
-                        StyleFormat::Encoding => {
-                            let value = value
-                                .parse::<i64>()
-                                .map_err(|error| Error::parse_int_error(error, value))?;
-                            style.set(*format, value);
-                        }
-                    }
+                    let value = format.parse_value(value)?;
+                    style.set(*format, value);
                     Ok::<_, Error>(())
                 })?;
             self.styles.add(style)?;
@@ -190,51 +119,8 @@ impl SsaParser {
                 .splitn(n, ',')
                 .zip(self.events.order())
                 .try_for_each(|(value, format)| {
-                    match format {
-                        EventFormat::Layer => {
-                            let value = value
-                                .parse::<i64>()
-                                .map_err(|error| Error::parse_int_error(error, value))?;
-                            event.set(*format, value);
-                        }
-                        EventFormat::Marked => {
-                            if let Some(pos) = value.find('=') {
-                                let key = &value[..pos];
-                                if key.to_ascii_lowercase() != "marked" {
-                                    return Err(Error::parse_error::<EventFormat>(format!(
-                                        "invalid marked key {}",
-                                        key
-                                    )));
-                                }
-                                let value = value[pos + 1..].parse::<i64>().map_err(|error| {
-                                    Error::parse_int_error(error, &value[pos + 1..])
-                                })?;
-                                event.set(*format, value);
-                            }
-                        }
-                        EventFormat::Start | EventFormat::End => {
-                            let value = Duration::parse(value)?;
-                            event.set(*format, value);
-                        }
-                        EventFormat::Style | EventFormat::Name => {
-                            event.set(*format, value.to_string());
-                        }
-                        EventFormat::MarginL | EventFormat::MarginR | EventFormat::MarginV => {
-                            let value = value
-                                .parse::<i64>()
-                                .map_err(|error| Error::parse_int_error(error, value))?;
-                            event.set(*format, value);
-                        }
-                        EventFormat::Effect => {
-                            if !value.is_empty() {
-                                let effect = Effect::parse(value)?;
-                                event.set(*format, effect);
-                            }
-                        }
-                        EventFormat::Text => {
-                            event.set(*format, value.to_string());
-                        }
-                    }
+                    let value = format.parse_value(value)?;
+                    event.set(*format, value);
                     Ok::<_, Error>(())
                 })?;
             self.events.push(event);
@@ -243,11 +129,17 @@ impl SsaParser {
     }
 
     pub(crate) fn parse_fonts(&mut self, src: &str) -> crate::Result<()> {
-        todo!("{}", src)
+        if let Some(font) = src.strip_prefix("fontname:").map(str::trim) {
+            self.fonts.push(font.to_string());
+        }
+        Ok(())
     }
 
     pub(crate) fn parse_graphics(&mut self, src: &str) -> crate::Result<()> {
-        todo!("{}", src)
+        if let Some(file) = src.strip_prefix("filename:").map(str::trim) {
+            self.graphics.push(file.to_string());
+        }
+        Ok(())
     }
 }
 
@@ -260,4 +152,123 @@ pub(crate) enum Context {
     ParseEvents,
     ParseFonts,
     ParseGraphics,
+}
+
+pub fn parse_i64(src: &str) -> crate::Result<Value> {
+    let value = src
+        .parse::<i64>()
+        .map_err(|error| Error::parse_int_error(error, src))?;
+    Ok(value.into())
+}
+
+pub fn parse_f64(src: &str) -> crate::Result<Value> {
+    let value = src
+        .parse::<f64>()
+        .map_err(|error| Error::parse_float_error(error, src))?;
+    Ok(value.into())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{events::EventFormat, styles::StyleFormat, value::Value};
+
+    use super::SsaParser;
+
+    #[test]
+    fn test_parse_script_info() -> crate::Result<()> {
+        let mut parser = SsaParser::default();
+        parser.parse_script_info("; comment1")?;
+        parser.parse_script_info(";comment2")?;
+        parser.parse_script_info("Title: Title1")?;
+        parser.parse_script_info("Custom: xxxxx")?;
+        assert_eq!(
+            parser.script_info.get_comments().unwrap(),
+            &[
+                Value::Str("comment1".to_string()),
+                Value::Str("comment2".to_string())
+            ]
+        );
+        assert_eq!(parser.script_info.get_title().unwrap(), "Title1");
+        assert_eq!(
+            parser.script_info.get_property("Custom").unwrap(),
+            &Value::Str("xxxxx".to_string())
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_styles() -> crate::Result<()> {
+        let mut parser = SsaParser::default();
+        parser.parse_styles("Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1")?;
+        parser.parse_styles("Style: OPCN,华康方圆体W7,50,&H00FFFFFF,&H00000000,&H00DDAB2F,&H00000000,-1,0,0,0,100,100,0.1,0,1,4,0,8,80,80,30,1")?;
+        let style = parser.styles.get_mut("OPCN").unwrap();
+        assert_eq!(
+            style
+                .get(StyleFormat::Name)
+                .and_then(Value::as_str)
+                .unwrap(),
+            "OPCN"
+        );
+        assert_eq!(
+            style
+                .get(StyleFormat::Fontname)
+                .and_then(Value::as_str)
+                .unwrap(),
+            "华康方圆体W7"
+        );
+        style.remove(StyleFormat::Fontname);
+        assert!(style.get(StyleFormat::Fontname).is_none());
+        style.set(StyleFormat::Fontname, "Arial");
+        assert_eq!(
+            style
+                .get(StyleFormat::Fontname)
+                .and_then(Value::as_str)
+                .unwrap(),
+            "Arial"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_events() -> crate::Result<()> {
+        let mut parser = SsaParser::default();
+        parser.parse_events("Dialogue: 0,0:00:00.00,0:00:05.00,Default,,0,0,0,,Hello, World!")?;
+        parser.parse_events("Dialogue: 0,0:00:05.00,0:00:10.00,Default,,0,0,0,,你好，世界！")?;
+        let event = parser.events.get(0).unwrap();
+        assert_eq!(
+            event
+                .get(EventFormat::Layer)
+                .and_then(Value::as_int)
+                .unwrap(),
+            0
+        );
+        assert_eq!(
+            event
+                .get(EventFormat::Style)
+                .and_then(Value::as_str)
+                .unwrap(),
+            "Default"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_fonts() -> crate::Result<()> {
+        let mut parser = SsaParser::default();
+        parser.parse_fonts("fontname:Arial")?;
+        parser.parse_fonts("fontname:华康方圆体W7")?;
+        assert_eq!(parser.fonts.get(0).unwrap(), "Arial");
+        assert_eq!(parser.fonts.get(1).unwrap(), "华康方圆体W7");
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_graphics() -> crate::Result<()> {
+        let mut parser = SsaParser::default();
+        parser.parse_graphics("filename:logo.png")?;
+        parser.parse_graphics("filename:background.jpg")?;
+        assert_eq!(parser.graphics.get(0).unwrap(), "logo.png");
+        assert_eq!(parser.graphics.get(1).unwrap(), "background.jpg");
+        Ok(())
+    }
 }

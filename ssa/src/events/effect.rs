@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use crate::{error::Error, parser::Parser};
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Effect {
     None,
     Unknown(String),
@@ -153,12 +153,76 @@ impl Display for Effect {
 impl Parser for Effect {
     fn parse(src: &str) -> crate::Result<Self> {
         let parts: Vec<&str> = src.split(';').collect();
-        match parts.get(0) {
-            Some(&"Karaoke") => Ok(Effect::Karaoke),
-            Some(&"Scroll up") => Effect::parse_scroll_effect(&parts, "Scroll up"),
-            Some(&"Scroll down") => Effect::parse_scroll_effect(&parts, "Scroll down"),
-            Some(&"Banner") => Effect::parse_banner_effect(&parts),
+        let effect = parts.get(0).map(|s| s.to_ascii_lowercase());
+        match effect.as_ref().map(|s| s.as_str()) {
+            Some("karaoke") => Ok(Effect::Karaoke),
+            Some("scroll up") => Effect::parse_scroll_effect(&parts, "Scroll up"),
+            Some("scroll down") => Effect::parse_scroll_effect(&parts, "Scroll down"),
+            Some("banner") => Effect::parse_banner_effect(&parts),
             _ => Ok(Effect::Unknown(src.to_string())),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_karaoke_effect() {
+        let src = "Karaoke";
+        let effect = Effect::parse(src).unwrap();
+        assert_eq!(effect, Effect::Karaoke);
+    }
+
+    #[test]
+    fn test_parse_scroll_up_effect() {
+        let src = "Scroll up;100;200;100";
+        let effect = Effect::parse(src).unwrap();
+        assert_eq!(
+            effect,
+            Effect::ScrollUp {
+                y1: 100,
+                y2: 200,
+                delay: 100,
+                fadeawayheight: None
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_scroll_down_effect() {
+        let src = "Scroll down;200;300;100";
+        let effect = Effect::parse(src).unwrap();
+        assert_eq!(
+            effect,
+            Effect::ScrollDown {
+                y1: 200,
+                y2: 300,
+                delay: 100,
+                fadeawayheight: None
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_banner_effect() {
+        let src = "Banner;100;1;50";
+        let effect = Effect::parse(src).unwrap();
+        assert_eq!(
+            effect,
+            Effect::Banner {
+                delay: 100,
+                lefttoright: true,
+                fadeawayheight: Some(50)
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_unknown_effect() {
+        let src = "UnknownEffect;data";
+        let effect = Effect::parse(src).unwrap();
+        assert_eq!(effect, Effect::Unknown(src.to_string()));
     }
 }

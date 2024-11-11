@@ -15,7 +15,7 @@ use std::{path::Path, str::FromStr};
 
 use super::{events::Events, script_info::ScriptInfo, styles::V4Styles};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Eq, PartialEq)]
 pub struct File {
     pub version: Version,
     pub script: ScriptInfo,
@@ -71,6 +71,7 @@ impl File {
         let mut parser = SsaParser::default();
         let mut lines_iter = ssa_str.lines().into_iter();
         while let Some(line) = lines_iter.next() {
+            let line = line.trim();
             if line.is_empty() {
                 continue;
             }

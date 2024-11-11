@@ -2,7 +2,10 @@ use effect::Effect;
 use itertools::Itertools;
 use std::ops::{Deref, DerefMut};
 use std::{fmt::Display, time::Duration};
+use text::Text;
 
+use crate::error::Error;
+use crate::parser::{parse_i64, Parser};
 use crate::value::Value;
 
 pub mod effect;
@@ -38,9 +41,44 @@ impl EventFormat {
             EventFormat::Text => "".to_owned().into(),
         }
     }
+
+    pub fn parse_value(&self, src: &str) -> crate::Result<Value> {
+        let value = match self {
+            EventFormat::Layer => parse_i64(src)?,
+            EventFormat::Marked => {
+                let pos = src.find('=').ok_or(Error::ParseError {
+                    ty: "Marked",
+                    msg: format!("Invalid Marked value: {}", src),
+                })?;
+                let key = &src[..pos];
+                if key.to_ascii_lowercase() != "marked" {
+                    return Err(Error::ParseError {
+                        ty: "Marked",
+                        msg: format!("Invalid Marked key: {}", key),
+                    });
+                }
+                parse_i64(&src[pos + 1..])?
+            }
+            EventFormat::Start | EventFormat::End => {
+                let value = Duration::parse(src)?;
+                value.into()
+            }
+            EventFormat::Style | EventFormat::Name => src.to_owned().into(),
+            EventFormat::MarginL | EventFormat::MarginR | EventFormat::MarginV => parse_i64(src)?,
+            EventFormat::Effect => {
+                let value = Effect::parse(src)?;
+                value.into()
+            }
+            EventFormat::Text => {
+                let value = Text::parse(src)?;
+                value.into()
+            }
+        };
+        Ok(value)
+    }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::EnumString, strum::Display)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, strum::EnumString, strum::Display)]
 #[strum(ascii_case_insensitive)]
 pub enum EventType {
     Dialogue,
@@ -51,7 +89,7 @@ pub enum EventType {
     Command,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Event {
     event_type: EventType,
     values: Vec<(EventFormat, Option<Value>)>,
@@ -121,7 +159,7 @@ impl Display for Event {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Events {
     order: Vec<EventFormat>,
     pub events: Vec<Event>,

@@ -2,10 +2,13 @@ use std::fmt::Display;
 
 use itertools::Itertools;
 
-use crate::value::Value;
+use crate::{
+    parser::{parse_f64, parse_i64},
+    value::Value,
+};
 
 #[derive(
-    Debug, Copy, Clone, Eq, PartialEq, strum::Display, strum::EnumString, strum::VariantNames,
+    Debug, Copy, Clone, Eq, PartialEq, Hash, strum::Display, strum::EnumString, strum::VariantNames,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum StyleFormat {
@@ -44,8 +47,7 @@ pub enum StyleFormat {
 impl StyleFormat {
     fn default_value(&self) -> Value {
         match self {
-            StyleFormat::Name => "".to_owned().into(),
-            StyleFormat::Fontname => "".to_owned().into(),
+            StyleFormat::Name | StyleFormat::Fontname => "".to_owned().into(),
             StyleFormat::Fontsize => 0.into(),
             StyleFormat::PrimaryColour
             | StyleFormat::SecondaryColour
@@ -68,9 +70,38 @@ impl StyleFormat {
             StyleFormat::Encoding => 134.into(),
         }
     }
+
+    pub(crate) fn parse_value(&self, src: &str) -> crate::Result<Value> {
+        let value = match self {
+            StyleFormat::Name | StyleFormat::Fontname => src.into(),
+            StyleFormat::Fontsize => parse_i64(src)?,
+            StyleFormat::PrimaryColour
+            | StyleFormat::SecondaryColour
+            | StyleFormat::TertiaryColour
+            | StyleFormat::OutlineColour
+            | StyleFormat::BackColour => src.into(),
+            StyleFormat::Bold
+            | StyleFormat::Italic
+            | StyleFormat::Underline
+            | StyleFormat::StrikeOut => parse_i64(src)?,
+            StyleFormat::ScaleX
+            | StyleFormat::ScaleY
+            | StyleFormat::Spacing
+            | StyleFormat::Angle => parse_f64(src)?,
+            StyleFormat::BorderStyle => parse_i64(src)?,
+            StyleFormat::Outline | StyleFormat::Shadow => parse_f64(src)?,
+            StyleFormat::Alignment
+            | StyleFormat::MarginL
+            | StyleFormat::MarginR
+            | StyleFormat::MarginV
+            | StyleFormat::AlphaLevel
+            | StyleFormat::Encoding => parse_i64(src)?,
+        };
+        Ok(value)
+    }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Style(Vec<(StyleFormat, Option<Value>)>);
 
 impl Style {
@@ -137,7 +168,7 @@ impl Display for Style {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct V4Styles {
     order: Vec<StyleFormat>,
     styles: Vec<(String, Style)>,

@@ -1,6 +1,9 @@
 use itertools::Itertools;
 
-use crate::{events::effect::Effect, format_duration};
+use crate::{
+    events::{effect::Effect, text::Text},
+    format_duration,
+};
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
@@ -12,6 +15,7 @@ pub enum Value {
     List(Vec<Value>),
     Duration(Duration),
     Effect(Effect),
+    Text(Text),
 }
 
 impl PartialEq for Value {
@@ -24,6 +28,7 @@ impl PartialEq for Value {
             (Value::List(a), Value::List(b)) => a == b,
             (Value::Duration(a), Value::Duration(b)) => a == b,
             (Value::Effect(a), Value::Effect(b)) => a == b,
+            (Value::Text(a), Value::Text(b)) => a == b,
             _ => false,
         }
     }
@@ -45,6 +50,7 @@ impl std::fmt::Display for Value {
             }
             Value::Duration(duration) => write!(f, "{}", format_duration(duration)),
             Value::Effect(effect) => write!(f, "{}", effect),
+            Value::Text(text) => write!(f, "{}", text),
         }
     }
 }
@@ -155,6 +161,12 @@ impl Into<Value> for String {
     }
 }
 
+impl Into<Value> for &str {
+    fn into(self) -> Value {
+        Value::Str(self.to_string())
+    }
+}
+
 impl Into<Value> for i64 {
     fn into(self) -> Value {
         Value::Int(self)
@@ -188,5 +200,11 @@ impl Into<Value> for Duration {
 impl Into<Value> for Effect {
     fn into(self) -> Value {
         Value::Effect(self)
+    }
+}
+
+impl Into<Value> for Text {
+    fn into(self) -> Value {
+        Value::Text(self)
     }
 }
