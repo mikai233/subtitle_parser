@@ -1,7 +1,11 @@
 [package]
 name = "ssa_parser"
 version = "0.1.0"
+authors = ["dreamfever2018@gmail.com"]
 edition = "2021"
+description = "A ssa subtitle parsing library"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/mikai233/subtitle_parser"
 
 [dependencies]
 encoding_rs = "0.8.35"
