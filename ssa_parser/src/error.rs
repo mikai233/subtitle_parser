@@ -2,7 +2,7 @@ use std::any::type_name;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("unknown ssa file format version `{0}`")]
+    #[error("unknown ssa_parser file format version `{0}`")]
     UnknownSSAVersion(String),
     #[error("parse to {ty} error, {msg}")]
     ParseError { ty: &'static str, msg: String },
