@@ -2,6 +2,8 @@ use encoding_rs::UTF_8;
 use std::fmt::Write;
 use strum::VariantNames;
 
+use super::{events::Events, script_info::ScriptInfo, styles::V4Styles};
+use crate::script_info::ScriptType;
 use crate::{
     error::Error,
     events::EventFormat,
@@ -12,8 +14,6 @@ use crate::{
     version::Version,
 };
 use std::{path::Path, str::FromStr};
-
-use super::{events::Events, script_info::ScriptInfo, styles::V4Styles};
 
 #[derive(Debug, Clone, Default, Eq, PartialEq)]
 pub struct File {
@@ -145,13 +145,23 @@ impl File {
             }
         }
         let SsaParser {
-            script_info,
+            mut script_info,
             styles,
             events,
             fonts,
             graphics,
             ..
         } = parser;
+        if script_info.get_script_type().is_none() {
+            match version {
+                Version::V4 => {
+                    script_info.set_script_type(ScriptType::V4);
+                }
+                Version::V4Plus => {
+                    script_info.set_script_type(ScriptType::V4Plus);
+                }
+            }
+        }
         let file = File {
             version,
             script: script_info,
@@ -211,41 +221,5 @@ impl File {
             }
             None => Err(Error::parse_error::<Events>("invalid event header format")),
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::File;
-    use crate::events::EventFormat;
-    use crate::script_info::ScriptType;
-    use crate::value::Value;
-    use crate::version::Version;
-    use std::time::Duration;
-
-    #[test]
-    fn test_default() {
-        let file = File::new();
-        assert_eq!(file.version, Version::V4Plus);
-        assert!(matches!(
-            file.script.get_script_type(),
-            Some(ScriptType::V4Plus)
-        ));
-    }
-
-    #[test]
-    fn test_file() -> crate::Result<()> {
-        let path="D:/BaiduNetdiskDownload/TSDM@sillonae@onimai 别当欧尼酱了/[SweetSub&VCB-Studio] Oniichan ha Oshimai! [Ma10p_1080p]/[SweetSub&VCB-Studio] Oniichan ha Oshimai! [01][Ma10p_1080p][x265_flac_2ac3].chs.ass";
-        let mut file = File::from_file(path)?;
-        for event in file.events.iter_mut() {
-            if let Some(duration) = event
-                .get_mut(EventFormat::Start)
-                .and_then(Value::as_duration_mut)
-            {
-                *duration += Duration::from_secs(60);
-            }
-        }
-        println!("{}", file.to_string()?);
-        Ok(())
     }
 }

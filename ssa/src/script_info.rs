@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Display};
 
 use crate::{parser::Parser, value::Value};
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct ScriptInfo {
     properties: Vec<(String, Value)>,
 }
@@ -50,10 +50,14 @@ impl ScriptInfo {
         self.properties.iter_mut().map(|(k, v)| (k.as_str(), v))
     }
 
+    pub fn clear(&mut self) {
+        self.properties.clear();
+    }
+
     pub fn add_comment(&mut self, comment: impl Into<String>) {
         let comments = self
             .get_property_mut(Key::Comment)
-            .and_then(|v| v.as_list_mut());
+            .and_then(Value::as_list_mut);
         match comments {
             Some(comments) => {
                 comments.push(Value::Str(comment.into()));
@@ -303,7 +307,6 @@ impl Display for ScriptInfo {
                         writeln!(f, "; {}", ele)?;
                     }
                 }
-                continue;
             } else if key == Key::ScaledBorderAndShadow.as_ref() {
                 let value = if value.as_bool().unwrap_or_default() {
                     "yes"
@@ -311,25 +314,11 @@ impl Display for ScriptInfo {
                     "no"
                 };
                 writeln!(f, "{}: {}", key, value)?;
-                continue;
+            } else {
+                writeln!(f, "{}: {}", key, value)?;
             }
-            writeln!(f, "{}: {}", key, value)?;
         }
         Ok(())
-    }
-}
-
-impl Default for ScriptInfo {
-    fn default() -> Self {
-        let mut script_info = Self {
-            properties: Default::default(),
-        };
-        script_info.set_script_type(ScriptType::V4Plus);
-        script_info.set_play_res_x(1920);
-        script_info.set_play_res_y(1080);
-        script_info.set_scaled_border_and_shadow(true);
-        script_info.set_wrap_style(0);
-        script_info
     }
 }
 
